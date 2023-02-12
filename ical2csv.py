@@ -24,7 +24,7 @@ if len(sys.argv) <= 1:
 filename = sys.argv[1]
 # TODO: use regex to get file extension (chars after last period), in case it's not exactly 3 chars.
 file_extension = str(sys.argv[1])[-3:]
-headers = ('Summary', 'UID', 'Description', 'Location', 'Start Time', 'End Time', 'URL')
+headers = ('Summary', 'UID', 'Description', 'Location', 'Start Time', 'End Time', 'URL', 'Attendees')
 
 class CalendarEvent:
     """Calendar event class"""
@@ -35,6 +35,7 @@ class CalendarEvent:
     start = ''
     end = ''
     url = ''
+    attendees = ''
 
     def __init__(self, name):
         self.name = name
@@ -80,6 +81,13 @@ def open_cal():
                      if component.get('DESCRIPTION') == None: continue #skip blank items
                      event.description = component.get('DESCRIPTION')
                      event.location = component.get('LOCATION')
+
+                     if component.get('ATTENDEE'):
+                        event_attendees = []
+                        for attendee in component.get('ATTENDEE'):
+                            event_attendees.append(str(attendee))
+                        event.attendees = ";".join(event_attendees)
+
                      if hasattr(component.get('dtstart'), 'dt'):
                          event.start = component.get('dtstart').dt
                      if hasattr(component.get('dtend'), 'dt'):
@@ -115,7 +123,7 @@ def csv_write(icsfile):
             wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
             wr.writerow(headers)
             for event in sortedevents:
-                values = (event.summary.encode('utf-8').decode(), event.uid, removehtml(event.description.encode('utf-8').decode()), event.location.encode('utf-8').decode(), event.start, event.end, event.url)
+                values = (event.summary.encode('utf-8').decode(), event.uid, removehtml(event.description.encode('utf-8').decode()), event.location.encode('utf-8').decode(), event.start, event.end, event.url, event.attendees)
                 wr.writerow(values)
                 sys.stdout.write(".")
                 sys.stdout.flush()
